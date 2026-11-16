@@ -1,0 +1,6 @@
+{"person":"Priya","time":"14:00","items":[
+{"id":"a","text":"She asked for feedback on the Q3 roadmap draft","state":"clear","stale":false,"sources":[{"date":"2026-11-09","file":"1-1s/priya-2026-11-09.md","quote":"Could you look at my Q3 roadmap draft before we next meet?"}]},
+{"id":"b","text":"Promotion conversation was promised \"after the offsite\"","state":"check","stale":true,"ageLabel":"7 weeks old","sources":[{"date":"2026-09-28","file":"1-1s/priya-2026-09-28.md","quote":"Let's pick up the promotion chat after the offsite."}]},
+{"id":"c","text":"Hiring plan for the design role","state":"check","stale":false,"sources":[{"date":"2026-11-12","file":"Meetings/design-sync.md","quote":"Priya to own the shortlist for the design hire."},{"date":"2026-11-13","file":"Meetings/staff.md","quote":"Design role headcount still pending finance."}]},
+{"id":"d","text":"Any agreed date for her parental leave handover","state":"not_found","stale":false,"sources":[]}
+]}

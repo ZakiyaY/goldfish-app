@@ -14,4 +14,12 @@ export interface GoldfishApi {
   ask(question: string, req: Req): Promise<AskAnswer>;
   getReceipt(): Promise<Receipt>;
   wipeSession(): Promise<void>;
+  getCalendarStatus(): Promise<CalendarStatus>;
+  refreshCalendar(): Promise<CalendarStatus>;
+  openSource(docId: string, mode: OpenMode): Promise<OpenResult>;
+  openFolder(folder: FolderId): Promise<OpenResult>;
 }
+export type CalendarState = "connected" | "off" | "needs_permission" | "file_missing" | "empty" | "error";
+export interface CalendarStatus { state: CalendarState; sourceLabel: string; lastReadAt: string | null; eventsToday: number; detail: string }
+export type OpenMode = "open" | "reveal";
+export interface OpenResult { ok: boolean; message: string }

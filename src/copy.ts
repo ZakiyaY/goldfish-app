@@ -68,5 +68,24 @@ export const copy = {
     empty: "Nothing on today.",
     briefReady: "brief ready",
   },
+  calendarStatus: {
+    row: "Calendar",
+    lastRead: (t: string) => `Last read ${t}`,
+    refresh: "Re-read calendar file",
+    from: (label: string, t: string) => `From ${label} · read ${t}`,
+    states: {
+      off: "Calendar is off. Turn it on to see your day.",
+      file_missing: "I can't find the calendar file. Export your calendar into the Calendar folder.",
+      needs_permission: "This laptop hasn't allowed calendar access yet.",
+      empty: "Nothing in your calendar today.",
+      error: "Couldn't read the calendar. Your notes are unaffected.",
+    },
+  },
+  open: {
+    note: "Open note",
+    reveal: "Show in folder",
+    folder: (name: string) => `Show ${name} in your file manager`,
+    folderOff: "Turn this folder on to open it.",
+  },
   retry: "Try again",
 };

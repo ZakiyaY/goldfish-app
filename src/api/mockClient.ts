@@ -1,14 +1,23 @@
 import { briefs, i3Evidence as _i3, i3Evidence, i3Reason, i5Evidence, meetings } from "./fixtures";
-import type { AskAnswer, Brief, Evidence, GoldfishApi, Receipt, Req } from "./types";
+import type { AskAnswer, Brief, CalendarStatus, Evidence, FolderId, GoldfishApi, Receipt, Req } from "./types";
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const emptyReceipt = (): Receipt => ({ filesRead: 0, bytesSentOffDevice: 0, blockedOutboundAttempts: 0, filesWrittenByAssistant: 0, itemsRetained: 0 });
+
+// The mock learns which folders are on from the latest getMeetings call (made on every folder change).
+let enabled: FolderId[] = ["calendar", "1-1s", "meetings", "inbox"];
+const calStatus = (): CalendarStatus => enabled.includes("calendar")
+  ? { state: "connected", sourceLabel: "Demo calendar (local .ics file)", lastReadAt: new Date().toISOString(), eventsToday: meetings.length, detail: "Read from a file on this laptop." }
+  : { state: "off", sourceLabel: "", lastReadAt: null, eventsToday: 0, detail: "Calendar is off." };
+const folderOf = (docId: string) =>
+  [...Object.values(briefs).flatMap((b) => b.items.flatMap((i) => i.evidence)), ..._i3, i5Evidence].find((e) => e.path === docId)?.folder;
 
 let lastPaths = { brief: new Set<string>(), ask: new Set<string>() };
 const allowed = (e: Evidence, req: Req) => req.folders.includes(e.folder) && !req.excludedDocs.includes(e.path);
 
 export const mockClient: GoldfishApi = {
   async getMeetings(_date, folders) {
+    enabled = folders;
     return folders.includes("calendar") ? meetings : [];
   },
   async getBrief(meetingId, req) {
@@ -49,6 +58,19 @@ export const mockClient: GoldfishApi = {
   },
   async getReceipt() {
     return { ...emptyReceipt(), filesRead: new Set([...lastPaths.brief, ...lastPaths.ask]).size };
+  },
+  async getCalendarStatus() { return calStatus(); },
+  async refreshCalendar() { await delay(400); return calStatus(); },
+  async openSource(docId, mode) {
+    const f = folderOf(docId);
+    if (!f || !enabled.includes(f)) return { ok: false, message: "That folder is off." };
+    await delay(300);
+    return { ok: true, message: `Demo mode: would ${mode === "open" ? "open" : "show in its folder"} ${docId}` };
+  },
+  async openFolder(folder) {
+    if (!enabled.includes(folder)) return { ok: false, message: "That folder is off." };
+    await delay(300);
+    return { ok: true, message: `Demo mode: would show the ${folder} folder` };
   },
   async wipeSession() {
     lastPaths = { brief: new Set(), ask: new Set() };

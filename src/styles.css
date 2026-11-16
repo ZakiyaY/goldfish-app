@@ -159,3 +159,7 @@
     color: var(--color-foreground);
   }
 }
+
+@keyframes gf-in { from { opacity: 0; transform: translateY(4px); background-color: var(--warning); } to { opacity: 1; transform: none; } }
+.gf-enter { animation: gf-in 700ms ease-out; }
+.gf-leave { opacity: 0; transition: opacity 300ms ease-in; }

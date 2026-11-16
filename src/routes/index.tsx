@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { Mic, Send, FileText, AlertTriangle, RotateCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import type { BriefItem, Evidence, ItemState, Meeting } from "@/api/types";
@@ -229,7 +229,8 @@ function pickDefault(meetings: Meeting[], nowMin: number | null) {
 function Screen() {
   const { date, selectedMeetingId, setSelectedMeetingId } = useSession();
   const m = useMeetings();
-  const [nowMin] = useState(() => { const d = new Date(); return d.toISOString().slice(0, 10) === date ? d.getHours() * 60 + d.getMinutes() : null; });
+  const [nowMin, setNowMin] = useState<number | null>(null);
+  useEffect(() => { const d = new Date(); if (d.toISOString().slice(0, 10) === date) setNowMin(d.getHours() * 60 + d.getMinutes()); }, [date]);
   const list = m.data ?? [];
   const meeting = list.find((x) => x.id === selectedMeetingId) ?? pickDefault(list, nowMin);
   return (

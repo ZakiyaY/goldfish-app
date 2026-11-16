@@ -149,7 +149,7 @@ function Centre() {
 
 const HOURS = Array.from({ length: 10 }, (_, i) => 8 + i);
 const ROW = 56;
-const toMin = (t: string) => { const [h, m] = t.split(":").map(Number); return h * 60 + m; };
+const toMin = (t: string) => { const [h, m] = t.split(":").map(Number); return (h ?? 0) * 60 + (m ?? 0); };
 
 function Right() {
   const q = useQuery({ queryKey: ["calendar", "2026-11-16"], queryFn: () => api.calendar("2026-11-16") });

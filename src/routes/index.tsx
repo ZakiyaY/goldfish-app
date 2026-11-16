@@ -173,7 +173,7 @@ function useAnimatedList(items: BriefItem[] | undefined, resetKey: string | null
       if (fresh || prev.length === 0) return items.map((item) => ({ item, phase: "idle" as const }));
       const ids = new Set(items.map((i) => i.id));
       const prevIds = new Set(prev.filter((p) => p.phase !== "leave").map((p) => p.item.id));
-      const next = items.map((item) => ({ item, phase: prevIds.has(item.id) ? ("idle" as const) : ("enter" as const) }));
+      const next: { item: BriefItem; phase: "enter" | "leave" | "idle" }[] = items.map((item) => ({ item, phase: prevIds.has(item.id) ? ("idle" as const) : ("enter" as const) }));
       prev.forEach((p, idx) => { if (!ids.has(p.item.id) && p.phase !== "leave") next.splice(Math.min(idx, next.length), 0, { item: p.item, phase: "leave" }); });
       return next;
     });

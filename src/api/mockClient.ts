@@ -1,4 +1,4 @@
-import { briefs, i3Evidence, i3Reason, i5Evidence, meetings } from "./fixtures";
+import { briefs, i3Evidence as _i3, i3Evidence, i3Reason, i5Evidence, meetings } from "./fixtures";
 import type { AskAnswer, Brief, Evidence, GoldfishApi, Receipt, Req } from "./types";
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -43,7 +43,8 @@ export const mockClient: GoldfishApi = {
       out = { question, state: "not_found", answer: null, reason: "Nothing in the folders I can read.", evidence: [], searched };
     }
     lastPaths.ask = new Set(out.evidence.map((e) => e.path));
-    out.searched.notes = lastPaths.ask.size;
+    const readable = new Set([...Object.values(briefs).flatMap((b) => b.items.flatMap((i) => i.evidence)), ..._i3, i5Evidence].filter((e) => allowed(e, req)).map((e) => e.path));
+    out.searched.notes = out.state === "not_found" ? readable.size : lastPaths.ask.size;
     return out;
   },
   async getReceipt() {

@@ -162,12 +162,18 @@ function Chip({ ownerId, s }: { ownerId: string; s: Evidence }) {
   const { excludedDocs, setExcludedDocs } = useSession();
   const { openSource } = useOpen();
   const [open, setOpen] = useState(false);
+  useEffect(() => {
+    if (!open) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setOpen(false); };
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [open]);
   const tip = `q-${ownerId}-${s.docId}`.replace(/[^\w-]/g, "_");
   const btn = "rounded-md px-2 py-1 font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2";
   return (
     <li className="relative" onMouseEnter={() => setOpen(true)} onMouseLeave={() => setOpen(false)}
       onFocus={() => setOpen(true)} onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget as Node | null)) setOpen(false); }}
-      onKeyDown={(e) => { if (e.key === "Escape") { e.stopPropagation(); setOpen(false); } }}>
+>
       <button type="button" aria-expanded={open} aria-controls={tip} onClick={() => setOpen(true)}
         className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 font-mono text-xs text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
         <FileText className="h-3 w-3" aria-hidden /> {s.docDate} · {s.path}

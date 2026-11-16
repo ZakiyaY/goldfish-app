@@ -1,0 +1,50 @@
+import type { FolderId, ItemState } from "@/api/types";
+
+export const copy = {
+  appName: "Goldfish",
+  appInitial: "g",
+  meta: {
+    title: "Goldfish — Your private meeting brief",
+    description: "A private brief for your next meeting, built only from the notes you let it read.",
+  },
+  privacy: {
+    panel: "Privacy",
+    canRead: "Can read",
+    remembers: "Remembers:",
+    rememberedNothing: "nothing",
+    rememberedItems: (n: number) => `${n} item${n === 1 ? "" : "s"}`,
+    receipt: (bytes: number, kept: string, files: number) => `RECEIPT\nFiles read: ${files}\nLeft this device: ${bytes} bytes\nKept: ${kept}`,
+    loading: "Loading folders",
+    receiptError: "Couldn't load the receipt.",
+  },
+  folders: { calendar: "Calendar", "1-1s": "1-1s", meetings: "Meetings", inbox: "Inbox", "hr-private": "HR-private" } satisfies Record<FolderId, string>,
+  brief: {
+    panel: "Brief",
+    heading: (name: string) => `Before you see ${name}`,
+    noMeeting: "Pick a meeting with a brief from today's calendar.",
+    loading: "Preparing brief",
+    error: "Couldn't prepare this brief.",
+    empty: "Nothing to prepare — no notes you allowed mention this meeting.",
+    noSources: "Nothing in the folders you allowed.",
+    sources: "Sources",
+    stale: "Stale",
+    weeksOld: (w: number) => `${w} week${w === 1 ? "" : "s"} old`,
+    sensitive: "Sensitive",
+  },
+  pills: { clear: "Clear", check: "Check this", not_found: "Not found" } satisfies Record<ItemState, string>,
+  ask: {
+    placeholder: "Ask about your notes",
+    voice: "Ask by voice",
+    send: "Send question",
+    error: "Couldn't answer that. Try again.",
+  },
+  calendar: {
+    panel: "Today",
+    heading: (label: string) => `Today · ${label}`,
+    loading: "Loading calendar",
+    error: "Couldn't load your calendar.",
+    empty: "Nothing on today.",
+    briefReady: "brief ready",
+  },
+  retry: "Try again",
+};

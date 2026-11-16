@@ -312,7 +312,7 @@ function Right({ meetings, isPending, isError, refetch, selectedId, onSelect }: 
               const selected = e.id === selectedId;
               return (
                 <li key={e.id} className="absolute left-12 right-0" style={{ top, height }}>
-                  <button type="button" disabled={!e.briefReady} aria-pressed={e.briefReady ? selected : undefined} onClick={() => onSelect(e.id)}
+                  <button type="button" aria-pressed={selected} onClick={() => onSelect(e.id)}
                     aria-label={`${e.start}–${e.end} ${e.title}${e.briefReady ? `, ${copy.calendar.briefReady}` : ""}`}
                     className={cn("h-full w-full overflow-hidden rounded-lg px-2 py-1 text-left text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
                       selected ? "bg-secondary font-semibold text-secondary-foreground border-l-4 border-primary"

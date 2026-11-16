@@ -1,7 +1,7 @@
 import type { AskAnswer, Brief, GoldfishApi, Meeting, Receipt } from "./types";
 
 // The only module allowed to make network calls.
-const BASE = (import.meta.env.VITE_API_BASE as string | undefined) ?? "http://127.0.0.1:8000";
+const BASE = (import.meta.env["VITE_API_BASE"] as string | undefined) ?? "http://127.0.0.1:8000";
 
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, { ...init, headers: { "Content-Type": "application/json", ...init?.headers } });

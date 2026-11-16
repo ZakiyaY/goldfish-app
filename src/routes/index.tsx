@@ -144,7 +144,7 @@ function Centre({ meeting }: { meeting: Meeting | null }) {
     <Panel title={copy.brief.panel} className="flex flex-col">
       {meeting && (
         <h1 className="text-2xl font-bold tracking-tight">
-          {copy.brief.heading(name)} <span className="text-primary">· {meeting.start}</span>
+          {copy.brief.heading(name ?? "")} <span className="text-primary">· {meeting.start}</span>
         </h1>
       )}
       <div className="mt-5 flex-1">

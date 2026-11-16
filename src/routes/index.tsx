@@ -1,7 +1,8 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState, type ReactNode } from "react";
-import { Mic, Send, FileText, AlertTriangle, RotateCw } from "lucide-react";
+import { Lock, Mic, MicOff, Send, FileText, AlertTriangle, RotateCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { BriefItem, Evidence, ItemState, Meeting } from "@/api/types";
 import { FIXTURE_DATE } from "@/api/fixtures";
 import { SessionProvider, useSession, FOLDER_IDS } from "@/state/session";
@@ -63,7 +64,7 @@ const pillCls: Record<ItemState, string> = {
 };
 
 function LeftColumn() {
-  const { enabledFolders, setFolder } = useSession();
+  const { enabledFolders, setFolder, req, wipe } = useSession();
   const r = useReceipt();
   const retained = r.data?.itemsRetained ?? 0;
   const kept = retained === 0 ? copy.privacy.rememberedNothing : copy.privacy.rememberedItems(retained);
@@ -76,39 +77,56 @@ function LeftColumn() {
       <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest opacity-70">{copy.privacy.canRead}</h2>
       <ul className="space-y-1">
         {FOLDER_IDS.map((id) => (
-          <li key={id} className="flex items-center justify-between rounded-lg px-2 py-2 hover:bg-sidebar-accent">
-            <label htmlFor={`f-${id}`} className="text-sm">{copy.folders[id]}</label>
-            <Switch id={`f-${id}`} checked={enabledFolders[id]} onCheckedChange={(v) => setFolder(id, v)} />
+          <li key={id} className="rounded-lg px-2 py-2 hover:bg-sidebar-accent">
+            <div className="flex items-center justify-between">
+              <label htmlFor={`f-${id}`} className="flex items-center gap-1.5 text-sm">
+                {id === "hr-private" && <Lock className="h-3.5 w-3.5" aria-hidden />}{copy.folders[id]}
+              </label>
+              <Switch id={`f-${id}`} checked={enabledFolders[id]} onCheckedChange={(v) => setFolder(id, v)} aria-describedby={id === "hr-private" ? "hr-note" : undefined} />
+            </div>
+            {id === "hr-private" && <p id="hr-note" className="mt-0.5 text-xs opacity-70">{copy.privacy.hrNote}</p>}
           </li>
         ))}
       </ul>
-      <div className="mt-6 rounded-lg bg-sidebar-accent px-3 py-2 text-sm">
+      <p aria-live="polite" className="mt-4 text-sm font-medium">{copy.privacy.canReadCount(req.folders.length)}</p>
+      <div className="mt-3 rounded-lg bg-sidebar-accent px-3 py-2 text-sm">
         {copy.privacy.remembers} <strong className="text-sidebar-primary">{kept}</strong>
       </div>
       {r.isError ? (
         <div className="mt-4"><Status kind="error" label={copy.privacy.receiptError} onRetry={() => r.refetch()} /></div>
       ) : (
-        <pre aria-busy={r.isPending} className="mt-4 whitespace-pre-wrap border-t border-dashed border-sidebar-border pt-4 font-mono text-xs leading-relaxed opacity-90">
-          {copy.privacy.receipt(r.data?.bytesSentOffDevice ?? 0, kept, r.data?.filesRead ?? 0)}
+        <pre aria-live="polite" aria-busy={r.isPending} className="mt-4 whitespace-pre-wrap border-t border-dashed border-sidebar-border pt-4 font-mono text-xs leading-relaxed opacity-90">
+          {copy.privacy.receipt(r.data?.filesRead ?? 0, r.data?.bytesSentOffDevice ?? 0, kept)}
         </pre>
       )}
+      <button type="button" onClick={() => void wipe()} className="mt-4 w-full rounded-md border border-sidebar-primary px-3 py-2 text-sm font-semibold text-sidebar-primary hover:bg-sidebar-primary hover:text-sidebar-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar">
+        {copy.privacy.wipe}
+      </button>
     </Panel>
   );
 }
 
 function Chips({ ownerId, evidence }: { ownerId: string; evidence: Evidence[] }) {
+  const { excludedDocs, setExcludedDocs } = useSession();
   return (
     <ul className="mt-3 flex flex-wrap gap-2" aria-label={copy.brief.sources}>
       {evidence.map((s) => {
         const tip = `q-${ownerId}-${s.docId}`.replace(/[^\w-]/g, "_");
         return (
-          <li key={s.docId} className="group relative">
-            <button className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 font-mono text-xs text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-describedby={tip}>
+          <li key={s.docId} className="group relative" onKeyDown={(e) => { if (e.key === "Escape") (document.activeElement as HTMLElement | null)?.blur(); }}>
+            <button type="button" className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-1 font-mono text-xs text-muted-foreground hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-describedby={tip}>
               <FileText className="h-3 w-3" aria-hidden /> {s.docDate} · {s.path}
             </button>
-            <span role="tooltip" id={tip} className="pointer-events-none absolute bottom-full left-0 z-10 mb-2 w-64 rounded-lg bg-popover p-3 text-xs text-popover-foreground opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
-              “{s.quote}”
-            </span>
+            <div id={tip} role="tooltip" className="invisible absolute bottom-full left-0 z-20 w-72 pb-2 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+              <div className="rounded-lg border bg-popover p-3 text-xs text-popover-foreground shadow-lg">
+                <blockquote className="border-l-4 border-primary pl-2 italic">“{s.quote}”</blockquote>
+                <p className="mt-2 text-muted-foreground">{copy.source.folder}: {copy.folders[s.folder]}</p>
+                <p className="text-muted-foreground">{copy.source.foundBecause(s.matchedBy)}</p>
+                <button type="button" onClick={() => setExcludedDocs([...excludedDocs, s.docId])} className="mt-2 rounded-md bg-primary px-2 py-1 font-semibold text-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2">
+                  {copy.source.leaveOut}
+                </button>
+              </div>
+            </div>
           </li>
         );
       })}
@@ -116,57 +134,117 @@ function Chips({ ownerId, evidence }: { ownerId: string; evidence: Evidence[] })
   );
 }
 
-function Item({ item, today }: { item: BriefItem; today: string }) {
+function Pill({ state }: { state: ItemState }) {
+  return <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold", pillCls[state])}>{copy.pills[state]}</span>;
+}
+
+function Item({ item, today, phase }: { item: BriefItem; today: string; phase: "enter" | "leave" | "idle" }) {
   const stale = item.flags.includes("stale");
+  const sensitive = item.flags.includes("sensitive");
   const newest = item.evidence.map((e) => e.docDate).sort().at(-1);
   const staleLabel = newest ? copy.brief.weeksOld(weeksBetween(newest, today)) : copy.brief.stale;
   return (
-    <li className="rounded-xl border p-4">
+    <li aria-hidden={phase === "leave" || undefined} className={cn("rounded-xl border p-4", phase === "enter" && "gf-enter", phase === "leave" && "gf-leave")}>
       <div className="flex flex-wrap items-start justify-between gap-2">
-        <p className="font-medium">{item.text}</p>
+        <div>
+          <p className="font-medium">{item.text}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">{item.reason}</p>
+        </div>
         <div className="flex gap-1.5">
+          {sensitive && <span className="inline-flex items-center gap-1 rounded-full border border-foreground px-2 py-0.5 text-xs font-semibold"><Lock className="h-3 w-3" aria-hidden />{copy.brief.sensitive}</span>}
           {stale && <span className="rounded-full bg-destructive px-2 py-0.5 text-xs font-semibold text-destructive-foreground">{staleLabel}</span>}
-          <span className={cn("rounded-full px-2 py-0.5 text-xs font-semibold", pillCls[item.state])}>{copy.pills[item.state]}</span>
+          <Pill state={item.state} />
         </div>
       </div>
-      {item.evidence.length > 0 ? <Chips ownerId={item.id} evidence={item.evidence} /> : <p className="mt-2 text-xs text-muted-foreground">{copy.brief.noSources}</p>}
+      {item.evidence.length > 0 && <Chips ownerId={item.id} evidence={item.evidence} />}
     </li>
   );
 }
 
-function Centre({ meeting }: { meeting: Meeting | null }) {
-  const { date } = useSession();
-  const q = useBrief(meeting?.id ?? null);
-  const [text, setText] = useState("");
-  const ask = useAsk();
-  const name = (q.data?.subject || meeting?.attendees[0] || "").split(" ")[0];
+// Keeps removed items briefly so they can fade out; marks newly added ones to fade in.
+function useAnimatedList(items: BriefItem[] | undefined, resetKey: string | null) {
+  const [shown, setShown] = useState<{ item: BriefItem; phase: "enter" | "leave" | "idle" }[]>([]);
+  const [lastKey, setLastKey] = useState(resetKey);
+  useEffect(() => {
+    if (!items) return;
+    const fresh = resetKey !== lastKey;
+    setLastKey(resetKey);
+    setShown((prev) => {
+      if (fresh || prev.length === 0) return items.map((item) => ({ item, phase: "idle" as const }));
+      const ids = new Set(items.map((i) => i.id));
+      const prevIds = new Set(prev.filter((p) => p.phase !== "leave").map((p) => p.item.id));
+      const next = items.map((item) => ({ item, phase: prevIds.has(item.id) ? ("idle" as const) : ("enter" as const) }));
+      prev.forEach((p, idx) => { if (!ids.has(p.item.id) && p.phase !== "leave") next.splice(Math.min(idx, next.length), 0, { item: p.item, phase: "leave" }); });
+      return next;
+    });
+    const t = setTimeout(() => setShown((s) => s.filter((p) => p.phase !== "leave")), 320);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [items, resetKey]);
+  return shown;
+}
+
+function WrongPerson({ meeting }: { meeting: Meeting }) {
   return (
-    <Panel title={copy.brief.panel} className="flex flex-col">
-      {meeting && (
-        <h1 className="text-2xl font-bold tracking-tight">
-          {copy.brief.heading(name ?? "")} <span className="text-primary">· {meeting.start}</span>
-        </h1>
-      )}
-      <div className="mt-5 flex-1">
-        {!meeting ? <Status kind="empty" label={copy.brief.noMeeting} />
+    <Popover>
+      <PopoverTrigger className="text-xs font-semibold text-primary underline underline-offset-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded">{copy.brief.wrongPerson}</PopoverTrigger>
+      <PopoverContent className="w-56 p-2">
+        <p className="px-2 pb-1 text-xs text-muted-foreground">{copy.brief.pickPerson}</p>
+        <ul>{meeting.attendees.map((a) => <li key={a}><button type="button" className="w-full rounded px-2 py-1.5 text-left text-sm hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">{a}</button></li>)}</ul>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function BriefCard({ meeting }: { meeting: Meeting }) {
+  const { date, req } = useSession();
+  const q = useBrief(meeting.id);
+  const shown = useAnimatedList(q.data?.items, meeting.id);
+  const noFolders = req.folders.length === 0;
+  return (
+    <section aria-label={copy.brief.panel} className="mt-5 rounded-xl border-2 border-foreground p-4">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 className="text-lg font-bold">{copy.brief.header(meeting.title, meeting.start)}</h2>
+        <div className="flex items-center gap-3 text-sm"><span>{q.data?.subject || meeting.attendees[0]}</span><WrongPerson meeting={meeting} /></div>
+      </div>
+      {q.data && <p className="mt-1 text-xs text-muted-foreground">{copy.brief.builtFrom(q.data.sourcesChecked.notes, q.data.sourcesChecked.folders, q.data.notConnected)}</p>}
+      <div className="mt-4">
+        {noFolders ? <Status kind="empty" label={copy.brief.noFolders} />
           : q.isPending ? <Status kind="loading" label={copy.brief.loading} />
           : q.isError ? <Status kind="error" label={copy.brief.error} onRetry={() => q.refetch()} />
-          : q.data.items.length === 0 ? <Status kind="empty" label={copy.brief.empty} />
-          : <ul className="space-y-3">{q.data.items.map((i) => <Item key={i.id} item={i} today={date} />)}</ul>}
+          : shown.length === 0 ? <Status kind="empty" label={copy.brief.empty} />
+          : <ul className="space-y-3">{shown.map(({ item, phase }) => <Item key={item.id} item={item} today={date} phase={phase} />)}</ul>}
       </div>
-      {ask.data && (
-        <div role="status" className="mt-4 rounded-lg bg-muted p-3 text-sm">
+    </section>
+  );
+}
+
+function AskBar() {
+  const [text, setText] = useState("");
+  const [mic, setMic] = useState(false);
+  const ask = useAsk();
+  const a = ask.data;
+  return (
+    <div className="sticky bottom-4 mt-5 space-y-3">
+      {a && (
+        <div role="status" className="rounded-xl border bg-card p-4 text-sm shadow-md">
           <div className="flex items-start justify-between gap-2">
-            <p>{ask.data.answer ?? ask.data.reason}</p>
-            <span className={cn("shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold", pillCls[ask.data.state])}>{copy.pills[ask.data.state]}</span>
+            <div>
+              <p className="font-medium">{a.state === "not_found" ? copy.ask.notFound(a.searched.notes) : a.answer ?? a.reason}</p>
+              {a.state !== "not_found" && <p className="mt-0.5 text-xs text-muted-foreground">{a.reason}</p>}
+            </div>
+            <Pill state={a.state} />
           </div>
-          {ask.data.evidence.length > 0 && <Chips ownerId="ask" evidence={ask.data.evidence} />}
+          {a.evidence.length > 0 && <Chips ownerId="ask" evidence={a.evidence} />}
         </div>
       )}
-      {ask.isError && <p role="alert" className="mt-4 text-sm text-destructive">{copy.ask.error}</p>}
-      <form className="mt-5 flex items-center gap-2 rounded-full border-2 border-foreground bg-background p-1.5" onSubmit={(e) => { e.preventDefault(); if (text.trim()) ask.mutate(text.trim()); }}>
-        <button type="button" aria-label={copy.ask.voice} className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-secondary text-secondary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
-          <Mic className="h-4 w-4" aria-hidden />
+      {ask.isError && <p role="alert" className="text-sm text-destructive">{copy.ask.error}</p>}
+      {mic && <p role="status" className="rounded-lg bg-warning px-3 py-2 text-sm font-semibold text-secondary-foreground">{copy.ask.micOn}</p>}
+      <form className="flex items-center gap-2 rounded-full border-2 border-foreground bg-background p-1.5" onSubmit={(e) => { e.preventDefault(); if (text.trim()) ask.mutate(text.trim()); }}
+        onKeyDown={(e) => { if (e.key === "Escape" && mic) setMic(false); }}>
+        <button type="button" aria-pressed={mic} aria-label={mic ? copy.ask.voiceStop : copy.ask.voice} onClick={() => setMic((m) => !m)}
+          className={cn("grid h-10 w-10 shrink-0 place-items-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring", mic ? "bg-destructive text-destructive-foreground" : "bg-secondary text-secondary-foreground")}>
+          {mic ? <MicOff className="h-4 w-4" aria-hidden /> : <Mic className="h-4 w-4" aria-hidden />}
         </button>
         <label htmlFor="ask" className="sr-only">{copy.ask.placeholder}</label>
         <input id="ask" value={text} onChange={(e) => setText(e.target.value)} placeholder={copy.ask.placeholder} className="min-w-0 flex-1 bg-transparent px-2 text-sm outline-none placeholder:text-muted-foreground" />
@@ -174,6 +252,37 @@ function Centre({ meeting }: { meeting: Meeting | null }) {
           <Send className="h-4 w-4" aria-hidden />
         </button>
       </form>
+    </div>
+  );
+}
+
+function Centre({ meetings, meeting, onSelect }: { meetings: Meeting[]; meeting: Meeting | null; onSelect: (id: string) => void }) {
+  const { enabledFolders } = useSession();
+  return (
+    <Panel title={copy.brief.panel} className="flex flex-col">
+      <p className="text-sm text-muted-foreground">{copy.purpose}</p>
+      <h1 className="mt-2 text-2xl font-bold tracking-tight">{copy.centre.heading}</h1>
+      {!enabledFolders.calendar ? <div className="mt-5"><Status kind="empty" label={copy.calendar.off} /></div> : (
+        <>
+          <div className="mt-5" role="group" aria-labelledby="prep-label">
+            <h2 id="prep-label" className="mb-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground">{copy.centre.prepareFor}</h2>
+            <div className="flex flex-wrap gap-2">
+              {meetings.map((m) => (
+                <button key={m.id} type="button" aria-pressed={m.id === meeting?.id} onClick={() => onSelect(m.id)}
+                  aria-label={`${m.start} ${m.title}${m.briefReady ? `, ${copy.centre.briefReady}` : ""}`}
+                  className={cn("inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
+                    m.id === meeting?.id ? "border-primary bg-primary text-primary-foreground" : "hover:border-primary")}>
+                  {m.briefReady && <span className="h-2 w-2 rounded-full bg-secondary" aria-hidden />}
+                  <span className="font-mono">{m.start}</span> {m.title}
+                </button>
+              ))}
+            </div>
+          </div>
+          {meeting ? <BriefCard meeting={meeting} /> : <div className="mt-5"><Status kind="empty" label={copy.brief.noMeeting} /></div>}
+        </>
+      )}
+      <div className="flex-1" />
+      <AskBar />
     </Panel>
   );
 }
@@ -185,11 +294,11 @@ const toMin = (t: string) => { const [h, m] = t.split(":").map(Number); return (
 function Right({ meetings, isPending, isError, refetch, selectedId, onSelect }: {
   meetings: Meeting[] | undefined; isPending: boolean; isError: boolean; refetch: () => void; selectedId: string | null; onSelect: (id: string) => void;
 }) {
-  const { date } = useSession();
+  const { date, enabledFolders } = useSession();
   return (
     <Panel title={copy.calendar.panel}>
       <h2 className="mb-4 text-sm font-semibold">{copy.calendar.heading(dayLabel(date))}</h2>
-      {isPending ? <Status kind="loading" label={copy.calendar.loading} /> : isError ? <Status kind="error" label={copy.calendar.error} onRetry={refetch} /> : !meetings?.length ? <Status kind="empty" label={copy.calendar.empty} /> : (
+      {!enabledFolders.calendar ? <Status kind="empty" label={copy.calendar.off} /> : isPending ? <Status kind="loading" label={copy.calendar.loading} /> : isError ? <Status kind="error" label={copy.calendar.error} onRetry={refetch} /> : !meetings?.length ? <Status kind="empty" label={copy.calendar.empty} /> : (
         <div className="relative" style={{ height: HOURS.length * ROW }}>
           {HOURS.map((h, i) => (
             <div key={h} className="absolute inset-x-0 flex border-t text-[11px] text-muted-foreground" style={{ top: i * ROW }}>
@@ -236,7 +345,7 @@ function Screen() {
   return (
     <main className="mx-auto grid min-h-screen max-w-7xl gap-4 p-4 lg:grid-cols-[260px_1fr_280px]">
       <LeftColumn />
-      <Centre meeting={meeting} />
+      <Centre meetings={list} meeting={meeting} onSelect={setSelectedMeetingId} />
       <Right meetings={m.data} isPending={m.isPending} isError={m.isError} refetch={() => m.refetch()} selectedId={meeting?.id ?? null} onSelect={setSelectedMeetingId} />
     </main>
   );

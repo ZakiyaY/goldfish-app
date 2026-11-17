@@ -4,7 +4,6 @@ import { Folder, Lock, Mic, MicOff, RefreshCw, Send, FileText, AlertTriangle, Ro
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import type { BriefItem, Evidence, ItemState, Meeting } from "@/api/types";
-import { FIXTURE_DATE } from "@/api/fixtures";
 import { SessionProvider, useSession, FOLDER_IDS } from "@/state/session";
 import { useMeetings } from "@/hooks/useMeetings";
 import { useBrief } from "@/hooks/useBrief";
@@ -409,8 +408,19 @@ function pickDefault(meetings: Meeting[], nowMin: number | null) {
 function Screen() {
   const { date, selectedMeetingId, setSelectedMeetingId } = useSession();
   const m = useMeetings();
-  const [nowMin, setNowMin] = useState<number | null>(null);
-  useEffect(() => { const d = new Date(); if (d.toISOString().slice(0, 10) === date) setNowMin(d.getHours() * 60 + d.getMinutes()); }, [date]);
+  const [now, setNow] = useState(() => new Date());
+  useEffect(() => {
+    const update = () => setNow(new Date());
+    const timer = window.setInterval(update, 30_000);
+    document.addEventListener("visibilitychange", update);
+    return () => {
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", update);
+    };
+  }, []);
+  const nowMin = new Date(`${date}T00:00:00`).toDateString() === now.toDateString()
+    ? now.getHours() * 60 + now.getMinutes()
+    : null;
   const list = m.data ?? [];
   const meeting = list.find((x) => x.id === selectedMeetingId) ?? pickDefault(list, nowMin);
   return (
@@ -423,5 +433,7 @@ function Screen() {
 }
 
 function Index() {
-  return <SessionProvider date={FIXTURE_DATE}><Screen /><Toaster position="bottom-center" /></SessionProvider>;
+  const today = new Date();
+  const date = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+  return <SessionProvider date={date}><Screen /><Toaster position="bottom-center" /></SessionProvider>;
 }

@@ -7,8 +7,6 @@ export const copy = {
     title: "Goldfish — Get ready for your day",
     description: "Get ready for your day from notes already on your laptop. Reads only folders you allow, keeps nothing.",
   },
-  purpose:
-    "Goldfish helps you get ready for the day from notes already on your laptop. It reads only the folders you allow, shows where each line came from, says \"not found\" instead of guessing, and keeps nothing.",
   privacy: {
     panel: "Privacy",
     canRead: "Can read",

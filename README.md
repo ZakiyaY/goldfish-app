@@ -1,27 +1,23 @@
 # 🐟 Goldfish
  
-**Helpful without remembering.** Goldfish gets a manager ready for their day from the notes already on their laptop. It shows where every line came from, says "not found" instead of guessing, and keeps nothing.
- 
-> Built for the **Pfizer OSS AI Studio × Newpage Solutions** hackathon challenge (University of Bristol, November 2026).
-> All data in this repository is **fictional**. No real notes, people or calendars are used.
+**Helpful without remembering.** Goldfish gets a manager ready for their day from the notes already on their laptop.
  
 ---
  
 ## Contents
  
-1. [The challenge](#the-challenge)
-2. [Our solution](#our-solution)
+1. [The Challenge](#the-challenge)
+2. [Our Solution](#our-solution)
 3. [Features](#features)
-4. [Tech stack and architecture](#tech-stack-and-architecture)
-5. [Getting started](#getting-started)
-6. [Repository structure](#repository-structure)
-7. [Privacy: what we claim and how you can check](#privacy-what-we-claim-and-how-you-can-check)
-8. [Design principles and evidence](#design-principles-and-evidence)
-9. [Future enhancements](#future-enhancements)
-10. [The team](#the-team)
+4. [Tech Stack](#tech-stack)
+5. [Getting Started](#getting-started)
+6. [Repository Structure](#repository-structure)
+7. [Privacy](#privacy)
+8. [Future enhancements](#future-enhancements)
+9. [The team](#the-team)
 ---
  
-## The challenge
+## The Challenge
  
 A manager's notes are scattered: meeting notes, action items, saved links, screenshots, reminders and half-written updates, spread across their own device. They are also some of the most sensitive information in a company, so **the value and the risk come from the same place.**
  
@@ -40,7 +36,7 @@ Where notes let managers down today:
  
 ---
  
-## Our solution
+## Our Solution
  
 Goldfish turns the manager's existing files into a short, **sourced brief** for the next meeting. 
  
@@ -96,7 +92,7 @@ Task breaking, day rescheduling and audio recaps. They are well covered by exist
  
 ---
  
-## Tech stack and architecture
+## Tech Stack
  
 | Layer | Choice | Why |
 |---|---|---|
@@ -109,7 +105,7 @@ Task breaking, day rescheduling and audio recaps. They are well covered by exist
 | OCR (P1) | Tesseract or similar, local | Screenshots to text on device |
 | Testing | pytest with a JSONL evaluation set | Accuracy is measured, not asserted |
  
-** Agentic Pipeline**
+**Agentic Pipeline**
 1. **Scan and parse:** each document gets an ID, folder, type, text and a date (taken from the content first, then the filename, then the file's modified time).
 2. **Find:** match people by alias and email, then rank notes by keyword and recency.
 3. **Extract:** turn each note into schema-constrained JSON, where every item carries a **verbatim quote**.
@@ -119,7 +115,7 @@ The human is the final step: review, edit, accept or decline.
  
 ---
  
-## Getting started
+## Getting Started
  
 ### Prerequisites
  
@@ -130,7 +126,7 @@ The human is the final step: review, edit, accept or decline.
  
 ```bash
 # 1. Clone
-git clone <https://github.com/ZakiyaY/goldfish-app.git>
+git clone https://github.com/ZakiyaY/goldfish-app.git
 cd goldfish-app
  
 # 2. Install and run the frontend
@@ -141,13 +137,13 @@ npm run dev
  
 Open the local address printed in the terminal (Vite's default is `http://localhost:5173`, but check the output).
  
-### Sample data
+### Sample Data
  
 `sample-notes/` is our fictional manager's laptop: notes, a calendar export, emails and screenshots, with **deliberate traps** (a stale note, two notes that disagree, an ambiguous name, a fact that exists only in `HR-private`, and a question the notes cannot answer) so we can test honesty.
  
 ---
  
-## Repository structure
+## Repository Structure
  
 _Current structure; it will evolve._
  
@@ -169,7 +165,7 @@ goldfish-app/
  
 ---
  
-## Privacy: what we claim and how you can check
+## Privacy
  
 **Our claim:** while Goldfish is running, the notes it reads stay on the device, and the assistant keeps no copy of them of its own.
  
@@ -192,13 +188,13 @@ goldfish-app/
  
 ---
  
-### How we used AI
+### AI Usage
  
-- **While building:** AI-assisted development tools (including Lovable for the initial interface and coding assistants) helped scaffold code. All sample data is fictional, and we reviewed the logic that touches files, network and extraction by hand.
+- **While building:** AI-assisted development tools (including Lovable for the initial interface) helped scaffold code. All sample data is fictional, and we reviewed the logic that touches files, network and extraction by hand.
 - **While running:** only **local open-source models**. No cloud AI service sees any note.
 ---
  
-## Future enhancements
+## Future Enhancements
  
 _To be detailed at the end of project review. Candidate ideas:_
  
@@ -213,7 +209,7 @@ _To be detailed at the end of project review. Candidate ideas:_
 - Larger evaluation sets, and testing with real managers
 ---
  
-## The team
+## The Team
  
 University of Bristol · AI Studio × Newpage hackathon, 2026
  

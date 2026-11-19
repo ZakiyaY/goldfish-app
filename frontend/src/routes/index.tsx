@@ -143,13 +143,6 @@ function LeftColumn() {
       <div className="mt-3 rounded-lg bg-sidebar-accent px-3 py-2 text-sm">
         {copy.privacy.remembers} <strong className="text-sidebar-primary">{kept}</strong>
       </div>
-      {r.isError ? (
-        <div className="mt-4"><Status kind="error" label={copy.privacy.receiptError} onRetry={() => r.refetch()} /></div>
-      ) : (
-        <pre aria-live="polite" aria-busy={r.isPending} className="mt-4 whitespace-pre-wrap border-t border-dashed border-sidebar-border pt-4 font-mono text-xs leading-relaxed opacity-90">
-          {copy.privacy.receipt(r.data?.filesRead ?? 0, r.data?.bytesSentOffDevice ?? 0, kept)}
-        </pre>
-      )}
       <button type="button" onClick={() => void wipe()} className="mt-4 w-full rounded-md border border-sidebar-primary px-3 py-2 text-sm font-semibold text-sidebar-primary hover:bg-sidebar-primary hover:text-sidebar-primary-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring focus-visible:ring-offset-2 focus-visible:ring-offset-sidebar">
         {copy.privacy.wipe}
       </button>

@@ -15,8 +15,6 @@ export const copy = {
     remembers: "Remembers:",
     rememberedNothing: "nothing",
     rememberedItems: (n: number) => `${n} item${n === 1 ? "" : "s"}`,
-    receipt: (files: number, bytes: number, kept: string) => `Read ${files} files. Left this device: ${bytes} bytes. Kept: ${kept}.`,
-    receiptError: "Couldn't load the receipt.",
     wipe: "Wipe session now",
   },
   folders: { calendar: "Calendar", "1-1s": "1-1s", meetings: "Meetings", inbox: "Inbox", "hr-private": "HR-private" } satisfies Record<FolderId, string>,

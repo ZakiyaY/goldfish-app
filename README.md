@@ -284,4 +284,4 @@ any real notes.
 
 ## Team
 
-Add your names here.
+Kawther , Zakiya , Sophie , Emma 

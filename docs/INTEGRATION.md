@@ -58,4 +58,4 @@ $env:STREAMLIT_BROWSER_GATHER_USAGE_STATS = "false"
 
 Open `http://127.0.0.1:8501`. For Streamlit's local-model features, start LM Studio with a model loaded and its local server available on port `1234` or `1235`.
 
-The bridge and Streamlit app are configured for offline model use; the integrated app's API and UI communicate through localhost. The bridge's Ask endpoint requires `sentence-transformers/all-MiniLM-L6-v2` to already be cached locally. This machine did not have those weights cached during verification, so Ask returned an offline-model error; no download is attempted automatically. Verify fully offline operation only after required models are already present.
+The bridge and Streamlit app are configured for offline model use; the integrated app's API and UI communicate through localhost. Both Python apps require `sentence-transformers/all-MiniLM-L6-v2` to already be cached locally. This machine did not have those weights cached: bridge Ask returns an offline-model error, and Streamlit displays a startup exception. No download is attempted automatically. Verify fully offline operation only after required models are already present.

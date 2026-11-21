@@ -10,7 +10,6 @@ export const meetings: Meeting[] = [
   { id: "m1", title: "Team standup", start: "09:30", end: "10:00", attendees: [], briefReady: false },
   { id: "m2", title: "Roadmap review", start: "11:00", end: "12:00", attendees: ["Marcus Lee"], briefReady: true },
   { id: "m3", title: "1:1 with Priya", start: "14:00", end: "14:45", attendees: ["Priya Shah"], briefReady: true },
-  { id: "m4", title: "Focus time", start: "15:30", end: "17:00", attendees: [], briefReady: false },
 ];
 
 const notConnected = ["Outlook", "Teams", "OneNote"];

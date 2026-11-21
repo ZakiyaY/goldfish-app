@@ -12,6 +12,7 @@ import { useReceipt } from "@/hooks/useReceipt";
 import { useCalendarStatus, useRefreshCalendar } from "@/hooks/useCalendarStatus";
 import { useOpen } from "@/hooks/useOpen";
 import { Toaster } from "@/components/ui/sonner";
+import { CalendarAgenda } from "@/components/CalendarAgenda";
 import { copy } from "@/copy";
 import { cn } from "@/lib/utils";
 
@@ -359,10 +360,6 @@ function Centre({ meetings, meeting, onSelect }: { meetings: Meeting[]; meeting:
   );
 }
 
-const HOURS = Array.from({ length: 10 }, (_, i) => 8 + i);
-const ROW = 56;
-const toMin = (t: string) => { const [h, m] = t.split(":").map(Number); return (h ?? 0) * 60 + (m ?? 0); };
-
 function Right({ meetings, isPending, isError, refetch, selectedId, onSelect }: {
   meetings: Meeting[] | undefined; isPending: boolean; isError: boolean; refetch: () => void; selectedId: string | null; onSelect: (id: string) => void;
 }) {
@@ -374,31 +371,7 @@ function Right({ meetings, isPending, isError, refetch, selectedId, onSelect }: 
       <h2 className="mb-4 text-sm font-semibold">{copy.calendar.heading(dayLabel(date))}</h2>
       {!calMsg && st.data?.state === "connected" && <p className="-mt-3 mb-4 text-xs text-muted-foreground">{copy.calendarStatus.from(st.data.sourceLabel, timeLabel(st.data.lastReadAt))}</p>}
       {calMsg ? <Status kind="empty" label={calMsg} /> : isPending ? <Status kind="loading" label={copy.calendar.loading} /> : isError ? <Status kind="error" label={copy.calendar.error} onRetry={refetch} /> : !meetings?.length ? <Status kind="empty" label={copy.calendar.empty} /> : (
-        <div className="relative" style={{ height: HOURS.length * ROW }}>
-          {HOURS.map((h, i) => (
-            <div key={h} className="absolute inset-x-0 flex border-t text-[11px] text-muted-foreground" style={{ top: i * ROW }}>
-              <span className="w-10 -translate-y-2 bg-card pr-1 font-mono">{String(h).padStart(2, "0")}:00</span>
-            </div>
-          ))}
-          <ol>
-            {meetings.map((e) => {
-              const top = ((toMin(e.start) - 8 * 60) / 60) * ROW;
-              const height = Math.max(((toMin(e.end) - toMin(e.start)) / 60) * ROW - 4, 24);
-              const selected = e.id === selectedId;
-              return (
-                <li key={e.id} className="absolute left-12 right-0" style={{ top, height }}>
-                  <button type="button" aria-pressed={selected} onClick={() => onSelect(e.id)}
-                    aria-label={`${e.start}–${e.end} ${e.title}${e.briefReady ? `, ${copy.calendar.briefReady}` : ""}`}
-                    className={cn("h-full w-full overflow-hidden rounded-lg px-2 py-1 text-left text-xs focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring",
-                      selected ? "bg-secondary font-semibold text-secondary-foreground border-l-4 border-primary"
-                        : e.briefReady ? "bg-secondary/50 text-secondary-foreground" : "bg-muted text-muted-foreground")}>
-                    {e.start} {e.title}{e.briefReady && ` · ${copy.calendar.briefReady}`}
-                  </button>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
+        <CalendarAgenda meetings={meetings} selectedId={selectedId} onSelect={onSelect} />
       )}
     </Panel>
   );
@@ -406,6 +379,10 @@ function Right({ meetings, isPending, isError, refetch, selectedId, onSelect }: 
 
 // Default selection: next brief-ready meeting that hasn't ended yet, else the first brief-ready one.
 function pickDefault(meetings: Meeting[], nowMin: number | null) {
+  const toMin = (time: string) => {
+    const [hour, minute] = time.split(":").map(Number);
+    return (hour ?? 0) * 60 + (minute ?? 0);
+  };
   const ready = meetings.filter((m) => m.briefReady);
   return (nowMin !== null ? ready.find((m) => toMin(m.end) > nowMin) : undefined) ?? ready[0] ?? null;
 }

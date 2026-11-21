@@ -1,4 +1,4 @@
-import type { FolderId, ItemState } from "@/api/types";
+import type { ItemState } from "@/api/types";
 
 export const copy = {
   appName: "Goldfish",
@@ -11,13 +11,12 @@ export const copy = {
     panel: "Privacy",
     canRead: "Can read",
     canReadCount: (n: number) => `I can read ${n} folder${n === 1 ? "" : "s"}`,
-    hrNote: "Personal data. Off by default.",
+    hrNote: "Sensitive folder. Off by default.",
     remembers: "Remembers:",
     rememberedNothing: "nothing",
     rememberedItems: (n: number) => `${n} item${n === 1 ? "" : "s"}`,
     wipe: "Wipe session now",
   },
-  folders: { calendar: "Calendar", "1-1s": "1-1s", meetings: "Meetings", inbox: "Inbox", "hr-private": "HR-private" } satisfies Record<FolderId, string>,
   centre: {
     heading: "Get ready for your day",
     prepareFor: "Prepare for",

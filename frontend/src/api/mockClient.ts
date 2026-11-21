@@ -1,5 +1,5 @@
 import { briefs, i3Evidence as _i3, i3Evidence, i3Reason, i5Evidence, meetings } from "./fixtures";
-import type { AskAnswer, Brief, CalendarStatus, Evidence, FolderId, GoldfishApi, Receipt, Req } from "./types";
+import type { AskAnswer, Brief, CalendarStatus, Evidence, Folder, FolderId, GoldfishApi, Receipt, Req } from "./types";
 
 const delay = (ms: number) => new Promise((r) => setTimeout(r, ms));
 const emptyReceipt = (): Receipt => ({ filesRead: 0, bytesSentOffDevice: 0, blockedOutboundAttempts: 0, filesWrittenByAssistant: 0, itemsRetained: 0 });
@@ -16,6 +16,15 @@ let lastPaths = { brief: new Set<string>(), ask: new Set<string>() };
 const allowed = (e: Evidence, req: Req) => req.folders.includes(e.folder) && !req.excludedDocs.includes(e.path);
 
 export const mockClient: GoldfishApi = {
+  async getFolders(): Promise<Folder[]> {
+    return [
+      { id: "calendar", label: "Calendar", defaultEnabled: true, sensitive: false },
+      { id: "1-1s", label: "1-1s", defaultEnabled: true, sensitive: false },
+      { id: "meetings", label: "Meetings", defaultEnabled: true, sensitive: false },
+      { id: "inbox", label: "Inbox", defaultEnabled: true, sensitive: false },
+      { id: "hr-private", label: "HR-private", defaultEnabled: false, sensitive: true },
+    ];
+  },
   async getMeetings(_date, folders) {
     enabled = folders;
     return folders.includes("calendar") ? meetings : [];

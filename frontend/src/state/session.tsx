@@ -1,13 +1,18 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { api } from "@/api/client";
-import type { FolderId, Req } from "@/api/types";
+import type { Folder, FolderId, Req } from "@/api/types";
+import { useFolders } from "@/hooks/useFolders";
 
-export const FOLDER_IDS: FolderId[] = ["calendar", "1-1s", "meetings", "inbox", "hr-private"];
-const defaultFolders = (): Record<FolderId, boolean> => ({ calendar: true, "1-1s": true, meetings: true, inbox: true, "hr-private": false });
+const defaultsFor = (folders: Folder[]): Record<FolderId, boolean> =>
+  Object.fromEntries(folders.map((folder) => [folder.id, folder.defaultEnabled]));
 
 type Session = {
   date: string;
+  folders: Folder[];
+  foldersLoading: boolean;
+  foldersError: boolean;
+  refetchFolders: () => void;
   enabledFolders: Record<FolderId, boolean>;
   setFolder: (id: FolderId, on: boolean) => void;
   excludedDocs: string[];
@@ -22,12 +27,24 @@ const Ctx = createContext<Session | null>(null);
 
 export function SessionProvider({ date, children }: { date: string; children: ReactNode }) {
   const qc = useQueryClient();
+  const foldersQuery = useFolders();
+  const folders = foldersQuery.data ?? [];
   const [sessionDate, setSessionDate] = useState(date);
-  const [enabledFolders, setEnabled] = useState(defaultFolders);
+  const [enabledFolders, setEnabled] = useState<Record<FolderId, boolean>>({});
   const [excludedDocs, setExcludedDocs] = useState<string[]>([]);
   const [selectedMeetingId, setSelectedMeetingId] = useState<string | null>(null);
   const setFolder = useCallback((id: FolderId, on: boolean) => setEnabled((f) => ({ ...f, [id]: on })), []);
-  const req = useMemo<Req>(() => ({ folders: FOLDER_IDS.filter((f) => enabledFolders[f]), excludedDocs }), [enabledFolders, excludedDocs]);
+  const req = useMemo<Req>(
+    () => ({ folders: folders.filter((folder) => enabledFolders[folder.id]).map((folder) => folder.id), excludedDocs }),
+    [folders, enabledFolders, excludedDocs],
+  );
+  useEffect(() => {
+    const availableFolders = foldersQuery.data;
+    if (!availableFolders) return;
+    setEnabled((current) => Object.fromEntries(
+      availableFolders.map((folder) => [folder.id, current[folder.id] ?? folder.defaultEnabled]),
+    ));
+  }, [foldersQuery.data]);
   useEffect(() => {
     setSessionDate(date);
   }, [date]);
@@ -46,12 +63,26 @@ export function SessionProvider({ date, children }: { date: string; children: Re
   }, []);
   const wipe = useCallback(async () => {
     await api.wipeSession();
-    setEnabled(defaultFolders());
+    setEnabled(defaultsFor(foldersQuery.data ?? []));
     setExcludedDocs([]);
     setSelectedMeetingId(null);
     qc.clear();
-  }, [qc]);
-  const value = { date: sessionDate, enabledFolders, setFolder, excludedDocs, setExcludedDocs, selectedMeetingId, setSelectedMeetingId, req, wipe };
+  }, [foldersQuery.data, qc]);
+  const value = {
+    date: sessionDate,
+    folders,
+    foldersLoading: foldersQuery.isPending,
+    foldersError: foldersQuery.isError,
+    refetchFolders: () => { void foldersQuery.refetch(); },
+    enabledFolders,
+    setFolder,
+    excludedDocs,
+    setExcludedDocs,
+    selectedMeetingId,
+    setSelectedMeetingId,
+    req,
+    wipe,
+  };
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
 

@@ -1,6 +1,10 @@
 # 🐟 Goldfish
  
-**Helpful without remembering.** Goldfish gets a manager ready for their day from the notes already on their laptop.
+**Perfect recall of your notes. No memory of its own.**
+
+Goldfish is a private assistant for managers with scattered notes. It reads the notes
+on your own Mac, helps you in the moment, then forgets everything. Nothing leaves the
+device and nothing is kept.
  
 ---
  
@@ -35,7 +39,20 @@ Where notes let managers down today:
 | **Trust** | The more an assistant sees, the less comfortable it feels |
  
 ---
- 
+
+## The 30-second version
+
+- **The problem:** you are about to walk into a 1:1. What you know about that person is
+  spread across meeting notes, a to-do list, a chat screenshot and your calendar. You
+  forget what you promised, and you can't tell how long ago you promised it.
+- **What Goldfish does:** it finds the right note by meaning, joins notes written weeks
+  apart, spots when a newer note overrules an older one, and tells you where every line
+  came from.
+- **Why it is safe:** it runs on local AI models only. It never saves a copy, and you
+  can check that yourself on screen.
+
+---
+
 ## Our Solution
  
 Goldfish turns the manager's existing files into a short, **sourced brief** for the next meeting. 
@@ -52,6 +69,23 @@ Goldfish turns the manager's existing files into a short, **sourced brief** for 
 - **Extract, don't interpret.** Goldfish structures what is written. It does not infer intent, sentiment or performance, and it does not invent.
 - **Neutral wording.** We say *"No note shows you told her yet"*, not *"You haven't told her"*, because the absence of a note isn't proof. We say *"Two notes mention 9 Dec"*, not *"may clash"*, because the code detects the overlap and shows both sources, and the judgement stays with the manager.
 ---
+
+## Key Features
+
+| Tab | What it does |
+|---|---|
+| **Live** | Listens while you talk. When you mention something your notes cover, the exact line appears with how long ago you wrote it, plus a one-sentence insight. No typing. |
+| **Prepare for a 1:1** | Type a name and get a short brief: Start here, Loose ends, What has changed, Dates coming up. Includes Meeting mode (a tick-list) and Read it to me (your Mac speaks it). |
+| **Find by meaning** | Describe what you want. A search for "development goals" finds a note that says "keen on design stuff". |
+
+Other things worth knowing:
+
+- Works on a plain folder or an **Obsidian vault**, and can open any source note in Obsidian.
+- Reads notes, to-dos, **screenshots** and **calendar** files.
+- Can read the Mac's Calendar app live (off by default; you tick it on).
+- Says so when it cannot find something, and does not guess.
+
+---
  
 ## Features
  
@@ -61,14 +95,14 @@ Goldfish turns the manager's existing files into a short, **sourced brief** for 
  
 | Feature | Why it matters | Status |
 |---|---|---|
-| Folder toggles with live effect (turn off `HR-private` and its items disappear) | Knowledge Stays Yours: the user chooses what the assistant sees and can change their mind | 🟡 |
-| Day calendar from a local `.ics` file, with meeting picker | The calendar is the trigger for the brief | 🟡 |
-| Brief for a meeting, with **source chips** and the exact quote on hover or focus | Trust and traceability | 🟡 |
+| Folder toggles with live effect (turn off `HR-private` and its items disappear) | Knowledge Stays Yours: the user chooses what the assistant sees and can change their mind | ✅ |
+| Day calendar from a local `.ics` file, with meeting picker | The calendar is the trigger for the brief | ✅ |
+| Brief for a meeting, with **source chips** and the exact quote on hover or focus | Trust and traceability | ✅ |
 | **Clear / Check this / Not found** states, each with a one-line reason | Honest uncertainty, without made-up percentages | 🟡 |
-| Stale and conflict flags | Messy, out-of-date notes are normal | 🟡 |
+| Stale and conflict flags | Messy, out-of-date notes are normal | ✅ |
 | Honest "not found" when asked about something the notes don't cover | Resists guessing | 🟡 |
 | Receipt: files read, bytes sent off device, items kept | A claim the user can check, not just read | 🟡 UI · 🚧 measured by backend |
-| "Wipe session now" | User control | 🟡 |
+| "Wipe session now" | User control | ✅ |
 | Works with several note types: markdown, calendar (`.ics`), email (`.eml`) | Bonus criterion: more than one kind of notes | 🚧 |
 | Works with Wi-Fi off | Proof for "on device" | 🚧 |
  
@@ -97,13 +131,20 @@ Task breaking, day rescheduling and audio recaps. They are well covered by exist
 | Layer | Choice | Why |
 |---|---|---|
 | Frontend | React, Vite, TypeScript, Tailwind CSS | Fast to build, typed, and suits a single-page app |
-| Backend | FastAPI (Python), bound to `127.0.0.1` only | Python has the parsers, speech-to-text and OCR libraries |
-| Language model | Small open model run locally through Ollama | Nothing leaves the laptop, and no API keys are needed (the sponsors couldn't provide tokens, so we use open-source models) |
-| Retrieval | Aliases + keyword search, built **in memory** per session | A persistent index would be a copy |
+| Backend | FastAPI (Python)| Python has the parsers, speech-to-text and OCR libraries |
 | Storage | **None.** In-memory only | Any on-disk database is a copy |
 | Speech (P1) | faster-whisper, running locally | Browser speech APIs are often cloud-backed, so we avoid them |
-| OCR (P1) | Tesseract or similar, local | Screenshots to text on device |
 | Testing | pytest with a JSONL evaluation set | Accuracy is measured, not asserted |
+
+### The models
+
+| Job | Hugging Face task | Model |
+|---|---|---|
+| Find notes by meaning | Sentence Similarity | `sentence-transformers/all-MiniLM-L6-v2` |
+| Write the brief, read screenshots | Image-Text-to-Text | `mlx-community/Qwen3.5-4B-MLX-4bit` (run by LM Studio) |
+| Turn speech into words | Automatic Speech Recognition | `mlx-community/whisper-small-mlx` |
+
+---
  
 **Agentic Pipeline**
 1. **Scan and parse:** each document gets an ID, folder, type, text and a date (taken from the content first, then the filename, then the file's modified time).
@@ -121,7 +162,13 @@ The human is the final step: review, edit, accept or decline.
  
 - [Node.js](https://nodejs.org/) 20 or later, and npm
 - Git
-- _Backend (when enabled):_ Python 3.11 or later and [Ollama](https://ollama.com/)
+- A Mac with an Apple chip (M1 or newer). The Live tab needs this.
+- About 6 GB of free disk space for the models.
+- Python 3.10 or newer (most Macs already have it).
+-  [LM Studio](https://lmstudio.ai) (free).
+-  Optional: [Obsidian](https://obsidian.md) (free), to browse the demo notes.
+
+You need Wi-Fi for the setup. After that, Goldfish runs with Wi-Fi off.
 ### Run the frontend (mock mode)
  
 ```bash
@@ -136,12 +183,32 @@ npm run dev
 ```
  
 Open the local address printed in the terminal (Vite's default is `http://localhost:5173`, but check the output).
- 
-### Sample Data
- 
-`sample-notes/` is our fictional manager's laptop: notes, a calendar export, emails and screenshots, with **deliberate traps** (a stale note, two notes that disagree, an ambiguous name, a fact that exists only in `HR-private`, and a question the notes cannot answer) so we can test honesty.
- 
----
+
+### Run the model
+
+### Python Installation
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+
+### Download the two small models (one time only)
+
+```bash
+python3 -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('sentence-transformers/all-MiniLM-L6-v2'); print('SEARCH MODEL READY')"
+python3 -c "from huggingface_hub import snapshot_download; snapshot_download('mlx-community/whisper-small-mlx'); print('LISTENING MODEL READY')"
+```
+
+> **What you should see:** `SEARCH MODEL READY`, then `LISTENING MODEL READY`.
+### Demo Notes Creation
+```bash
+python3 make_vault.py
+```
+
+> **What you should see:** "Done. 12 new notes, calendar refreshed".
+
+This creates `GoldfishVault`, a folder of **invented** manager notes. Never use real notes
+for a demo.
+
  
 ## Repository Structure
  
@@ -167,17 +234,15 @@ goldfish-app/
  
 ## Privacy
  
-**Our claim:** while Goldfish is running, the notes it reads stay on the device, and the assistant keeps no copy of them of its own.
- 
-**How a user can check for themselves:**
- 
-| Check | What to look for |
+| Claim | How Goldfish shows it |
 |---|---|
-| **Wi-Fi off** | The app still works end to end |
-| **Folder toggle** | Turn off a folder. Its content disappears from the brief, and the receipt shows the change |
-| **Receipt** | "Read N files. Left this device: 0 bytes. Kept: nothing." These are **counted by the backend**, not typed in by hand |
-| **Remembers: nothing** | There is no memory store to inspect |
-| **Wipe session now** | Clears everything the assistant held in memory |
+| **Nothing leaves the device** | Works with Wi-Fi off. Goldfish also blocks any connection that is not to this computer, and counts the attempts on screen. |
+| **Nothing is kept** | A fingerprint of your notes folder is taken before and after. If they match, nothing was added, changed or copied. |
+| **You choose what it sees** | Tick boxes per folder. Untick one and those notes are dropped from memory straight away. |
+| **Speech is not recorded** | Sound is turned into words in memory and then dropped. |
+| **It never writes to your notes** | Follow-ups are given to you to copy and paste yourself. |
+| **Wipe session now** | Clears everything the assistant held in memory. |
+
  
 **Safeguards by design:**
 
@@ -186,6 +251,29 @@ goldfish-app/
 - Emails and notes are treated as **untrusted text** (to resist prompt injection). The model can't take actions and its output is schema-locked.
 - Saved links are never fetched, because fetching would send data off the device.
  
+---
+## Mapping to the Criteria
+
+| Criterion | What Goldfish does |
+|---|---|
+| Insight & problem understanding | One real moment: a manager in or just before a 1:1 who cannot remember what they promised or what has changed. |
+| Creative use of AI & design | The Live tab has no prompt. It handles initials ("P" for Priya), undated notes, and newer notes that overrule older ones. |
+| Working end to end | Runs on a laptop with invented notes. Four kinds of content: notes, to-dos, a screenshot and a calendar. |
+| Trust & explainability | Loose ends are word-for-word quotes. Every line names its note. It says when it cannot find something. |
+| Knowledge stays yours | Wi-Fi off, connection blocker, folder tick boxes, fingerprint check, Forget. |
+
+---
+
+## Known limits
+
+- The Live tab and Read it to me need a Mac with an Apple chip.
+- Screenshots are re-read on every fresh start, which takes a few seconds. Caching them
+  would mean keeping a copy, so Goldfish does not.
+- Exported calendar files show repeating events once. The live Calendar app connection
+  handles repeats.
+- Answers come from a small local model. It is told to use only your notes and to name
+  its source, but always open the source note for anything important.
+
 ---
  
 ### AI Usage

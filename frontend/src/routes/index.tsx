@@ -3,8 +3,8 @@ import { useEffect, useState, type ReactNode } from "react";
 import { Folder, Lock, Mic, MicOff, RefreshCw, Send, FileText, AlertTriangle, RotateCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import type { BriefItem, Evidence, ItemState, Meeting } from "@/api/types";
-import { SessionProvider, useSession, FOLDER_IDS } from "@/state/session";
+import type { BriefItem, CalendarStatus, Evidence, Folder as FolderInfo, ItemState, Meeting } from "@/api/types";
+import { SessionProvider, useSession } from "@/state/session";
 import { useMeetings } from "@/hooks/useMeetings";
 import { useBrief } from "@/hooks/useBrief";
 import { useAsk } from "@/hooks/useAsk";
@@ -12,7 +12,6 @@ import { useReceipt } from "@/hooks/useReceipt";
 import { useCalendarStatus, useRefreshCalendar } from "@/hooks/useCalendarStatus";
 import { useOpen } from "@/hooks/useOpen";
 import { Toaster } from "@/components/ui/sonner";
-import type { CalendarStatus, FolderId } from "@/api/types";
 import { copy } from "@/copy";
 import { cn } from "@/lib/utils";
 
@@ -61,23 +60,29 @@ function Status({ kind, label, onRetry }: { kind: "loading" | "empty" | "error";
 }
 
 const timeLabel = (iso: string | null) => iso ? new Intl.DateTimeFormat("en-GB", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date(iso)) : "";
+const folderDomId = (id: string) => encodeURIComponent(id);
 
 // Plain-language message that replaces the calendar and chips, or null when the calendar is usable.
 function useCalendarMessage(): string | null {
-  const { enabledFolders } = useSession();
+  const { enabledFolders, folders, foldersLoading, foldersError } = useSession();
   const st = useCalendarStatus();
-  if (!enabledFolders.calendar) return copy.calendarStatus.states.off;
+  if (foldersError) return copy.brief.error;
+  if (foldersLoading) return copy.calendar.loading;
+  const calendarFolder = folders.find((folder) => folder.id.toLowerCase() === "calendar");
+  if (!calendarFolder) return copy.calendarStatus.states.file_missing;
+  if (!(enabledFolders[calendarFolder.id] ?? calendarFolder.defaultEnabled)) return copy.calendarStatus.states.off;
   if (st.isError) return copy.calendarStatus.states.error;
   const state = st.data?.state;
   return state && state !== "connected" ? copy.calendarStatus.states[state] : null;
 }
 
-function FolderButton({ id, on }: { id: FolderId; on: boolean }) {
+function FolderButton({ folder, on }: { folder: FolderInfo; on: boolean }) {
+  const id = folder.id;
   const { openFolder } = useOpen();
-  const tip = `ft-${id}`;
+  const tip = `ft-${folderDomId(id)}`;
   return (
     <span className="group relative">
-      <button type="button" aria-label={copy.open.folder(copy.folders[id])} aria-disabled={!on} aria-describedby={on ? undefined : tip}
+      <button type="button" aria-label={copy.open.folder(folder.label)} aria-disabled={!on} aria-describedby={on ? undefined : tip}
         onClick={() => { if (on) void openFolder(id); }}
         className={cn("grid h-7 w-7 place-items-center rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring", on ? "hover:bg-sidebar-primary hover:text-sidebar-primary-foreground" : "cursor-not-allowed opacity-40")}>
         <Folder className="h-3.5 w-3.5" aria-hidden />
@@ -114,7 +119,7 @@ const pillCls: Record<ItemState, string> = {
 };
 
 function LeftColumn() {
-  const { enabledFolders, setFolder, req, wipe } = useSession();
+  const { enabledFolders, folders, foldersLoading, foldersError, refetchFolders, setFolder, req, wipe } = useSession();
   const r = useReceipt();
   const retained = r.data?.itemsRetained ?? 0;
   const kept = retained === 0 ? copy.privacy.rememberedNothing : copy.privacy.rememberedItems(retained);
@@ -126,17 +131,24 @@ function LeftColumn() {
       </div>
       <h2 className="mb-3 text-xs font-semibold uppercase tracking-widest opacity-70">{copy.privacy.canRead}</h2>
       <ul className="space-y-1">
-        {FOLDER_IDS.map((id) => (
-          <li key={id} className="rounded-lg px-2 py-2 hover:bg-sidebar-accent">
+        {foldersLoading ? <li role="status" className="px-2 py-2 text-sm">{copy.calendar.loading}</li>
+          : foldersError ? <li><Status kind="error" label={copy.brief.error} onRetry={refetchFolders} /></li>
+          : folders.map((folder) => {
+          const controlId = `f-${folderDomId(folder.id)}`;
+          const sensitiveId = `sensitive-${folderDomId(folder.id)}`;
+          const enabled = enabledFolders[folder.id] ?? folder.defaultEnabled;
+          return (
+          <li key={folder.id} className="rounded-lg px-2 py-2 hover:bg-sidebar-accent">
             <div className="flex items-center justify-between">
-              <label htmlFor={`f-${id}`} className="flex items-center gap-1.5 text-sm">
-                {id === "hr-private" && <Lock className="h-3.5 w-3.5" aria-hidden />}{copy.folders[id]}
+              <label htmlFor={controlId} className="flex items-center gap-1.5 text-sm">
+                {folder.sensitive && <Lock className="h-3.5 w-3.5" aria-hidden />}{folder.label}
               </label>
-              <span className="flex items-center gap-1"><FolderButton id={id} on={enabledFolders[id]} /><Switch id={`f-${id}`} checked={enabledFolders[id]} onCheckedChange={(v) => setFolder(id, v)} aria-describedby={id === "hr-private" ? "hr-note" : undefined} /></span>
+              <span className="flex items-center gap-1"><FolderButton folder={folder} on={enabled} /><Switch id={controlId} checked={enabled} onCheckedChange={(v) => setFolder(folder.id, v)} aria-describedby={folder.sensitive ? sensitiveId : undefined} /></span>
             </div>
-            {id === "hr-private" && <p id="hr-note" className="mt-0.5 text-xs opacity-70">{copy.privacy.hrNote}</p>}
+            {folder.sensitive && <p id={sensitiveId} className="mt-0.5 text-xs opacity-70">{copy.privacy.hrNote}</p>}
           </li>
-        ))}
+          );
+        })}
       </ul>
       <CalendarRow />
       <p aria-live="polite" className="mt-4 text-sm font-medium">{copy.privacy.canReadCount(req.folders.length)}</p>
@@ -151,7 +163,7 @@ function LeftColumn() {
 }
 
 function Chip({ ownerId, s }: { ownerId: string; s: Evidence }) {
-  const { excludedDocs, setExcludedDocs } = useSession();
+  const { folders, excludedDocs, setExcludedDocs } = useSession();
   const { openSource } = useOpen();
   const [open, setOpen] = useState(false);
   useEffect(() => {
@@ -173,7 +185,7 @@ function Chip({ ownerId, s }: { ownerId: string; s: Evidence }) {
       <div id={tip} role="dialog" aria-label={s.path} hidden={!open} className="absolute bottom-full left-0 z-20 w-72 pb-2">
         <div className="rounded-lg border bg-popover p-3 text-xs text-popover-foreground shadow-lg">
           <blockquote className="border-l-4 border-primary pl-2 italic">“{s.quote}”</blockquote>
-          <p className="mt-2 text-muted-foreground">{copy.source.folder}: {copy.folders[s.folder]}</p>
+          <p className="mt-2 text-muted-foreground">{copy.source.folder}: {folders.find((folder) => folder.id === s.folder)?.label ?? s.folder}</p>
           <p className="text-muted-foreground">{copy.source.foundBecause(s.matchedBy)}</p>
           <div className="mt-2 flex flex-wrap gap-1.5">
             <button type="button" onClick={() => void openSource(s.docId, "open")} className={cn(btn, "bg-primary text-primary-foreground")}>{copy.open.note}</button>

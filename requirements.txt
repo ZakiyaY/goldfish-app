@@ -1,0 +1,8 @@
+streamlit>=1.40
+sentence-transformers
+numpy
+pillow
+huggingface_hub
+sounddevice
+mlx-whisper; sys_platform == "darwin"
+pyobjc-framework-EventKit; sys_platform == "darwin"

@@ -24,7 +24,7 @@ export const copy = {
   },
   brief: {
     panel: "Brief",
-    header: (title: string, time: string) => `Brief · ${title} · ${time}`,
+    header: (title: string, time: string) => `${title} · ${time}`,
     wrongPerson: "Wrong person?",
     pickPerson: "Pick who this brief is about",
     builtFrom: (notes: number, folders: number, notConnected: string[]) =>

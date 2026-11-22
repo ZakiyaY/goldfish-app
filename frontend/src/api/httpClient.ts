@@ -1,4 +1,4 @@
-import type { AskAnswer, CalendarStatus, OpenResult, Brief, GoldfishApi, Meeting, Receipt } from "./types";
+import type { AskAnswer, CalendarStatus, Folder, OpenResult, Brief, GoldfishApi, Meeting, Receipt } from "./types";
 
 // The only module allowed to make network calls.
 const BASE = (import.meta.env["VITE_API_BASE"] as string | undefined) ?? "http://127.0.0.1:8000";
@@ -12,6 +12,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
 const post = <T>(path: string, body: unknown) => request<T>(path, { method: "POST", body: JSON.stringify(body) });
 
 export const httpClient: GoldfishApi = {
+  getFolders: () => request<Folder[]>("/api/folders"),
   getMeetings: (date, folders) => request<Meeting[]>(`/api/meetings?date=${encodeURIComponent(date)}&folders=${encodeURIComponent(folders.join(","))}`),
   getBrief: (meetingId, req) => post<Brief>("/api/brief", { meetingId, ...req }),
   ask: (question, req) => post<AskAnswer>("/api/ask", { question, ...req }),

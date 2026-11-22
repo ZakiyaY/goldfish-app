@@ -15,10 +15,9 @@ device and nothing is kept.
 3. [Features](#features)
 4. [Tech Stack](#tech-stack)
 5. [Getting Started](#getting-started)
-6. [Repository Structure](#repository-structure)
-7. [Privacy](#privacy)
-8. [Future enhancements](#future-enhancements)
-9. [The team](#the-team)
+6. [Privacy](#privacy)
+7. [Future enhancements](#future-enhancements)
+8. [The team](#the-team)
 ---
  
 ## The Challenge
@@ -89,7 +88,7 @@ Other things worth knowing:
  
 ## Features
  
-**Status key:** ✅ working · 🟡 UI built on mock data, backend in progress · 🚧 planned for this hackathon · ⏳ roadmap
+**Status key:** ✅ working · 🟡 UI built on mock data, backend in progress · 🚧 Roadmap
  
 ### MVP (P0)
  
@@ -103,17 +102,17 @@ Other things worth knowing:
 | Honest "not found" when asked about something the notes don't cover | Resists guessing | 🟡 |
 | Receipt: files read, bytes sent off device, items kept | A claim the user can check, not just read | 🟡 UI · 🚧 measured by backend |
 | "Wipe session now" | User control | ✅ |
-| Works with several note types: markdown, calendar (`.ics`), email (`.eml`) | Bonus criterion: more than one kind of notes | 🚧 |
-| Works with Wi-Fi off | Proof for "on device" | 🚧 |
+| Works with several note types: markdown, calendar (`.ics`), email (`.eml`) | Bonus criterion: more than one kind of notes | ✅ |
+| Works with Wi-Fi off | Proof for "on device" | ✅ |
  
 ### Should-have (P1)
  
 | Feature | Status |
 |---|---|
-| Capture by typing, then editable extracted fields, then explicit confirm, then append to the user's own file | 🚧 |
+| Capture by typing, then editable extracted fields, then explicit confirm, then append to the user's own file | ✅ |
 | Screenshot text recognition (OCR), with low-confidence text marked "Check this" | 🚧 |
-| Open the source note or reveal it in its folder (a click, never on hover) | 🚧 |
-| Local voice capture (offline speech-to-text) with a visible microphone state | 🚧 if stable |
+| Open the source note or reveal it in its folder (a click, never on hover) | ✅ |
+| Local voice capture (offline speech-to-text) with a visible microphone state | ✅ |
 | "Leave this source out" and "Wrong person?" corrections | 🚧 |
  
 ### Nice-to-have (P2 / roadmap)
@@ -208,27 +207,6 @@ python3 make_vault.py
 
 This creates `GoldfishVault`, a folder of **invented** manager notes. Never use real notes
 for a demo.
-
- 
-## Repository Structure
- 
-_Current structure; it will evolve._
- 
-```
-goldfish-app/
-├── README.md          # you are here
-├── AGENTS.md          # rules for AI coding assistants used on this project
-├── frontend/          # React + Vite + TypeScript UI
-│   └── src/
-│       ├── api/       # typed client, mock client, HTTP client
-│       ├── components/
-│       ├── hooks/
-│       └── ...
-├── backend/           # FastAPI service and the pipeline (scan, find, extract, verify, assemble)
-├── sample-notes/      # fictional manager data used for development and the demo
-├── eval/              # test cases with known answers, and the evaluation runner
-└── docs/              # architecture notes, privacy claims, decisions, demo script
-```
  
 ---
  
@@ -283,10 +261,6 @@ goldfish-app/
 ---
  
 ## Future Enhancements
- 
-_To be detailed at the end of project review. Candidate ideas:_
- 
-- Approved connectors for OneNote, Outlook and Teams, synced to the device so the on-device rule still holds
 - Optional, encrypted, user-owned cache, off by default, with retention limits
 - Calendar adapters for operating-system calendars
 - Transcript and meeting-recording support
@@ -301,12 +275,12 @@ _To be detailed at the end of project review. Candidate ideas:_
  
 University of Bristol · AI Studio × Newpage hackathon, 2026
  
-| Name | Contact |
-|---|---|
-| **Zakiya** | Zakiyaa01@hotmail.com |
-| **Kawther** |  |
-| **Emma** | |
-| **Sophie** | |
+| Name |
+|---|
+| **Zakiya** | 
+| **Kawther** |  
+| **Emma** | 
+| **Sophie** | 
  
 ---
  
